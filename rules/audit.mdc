@@ -1,0 +1,10 @@
+---
+description: Audit websites/apps/code with the JRiSpace webapp-audit skill
+alwaysApply: false
+---
+When the user asks to audit, review, grade, or pre-launch check a site, app or codebase:
+
+1. Run `python3 ~/.config/ai-agents/skills/webapp-audit/scripts/audit.py <url|path> --deep`
+2. Read the `audit-report.md` it writes.
+3. Report the grade table first, then only critical/high findings with their evidence line.
+4. Never claim a finding is fixed without re-running the audit.
