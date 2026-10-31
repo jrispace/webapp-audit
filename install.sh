@@ -103,11 +103,10 @@ EOF
 fi
 
 # ---------------------------------------------------------------- 4. self-test
-if python3 -c "import sys; sys.exit(0 if sys.version_info >= (3,9) else 1)"; then
-  ok "python $((python3 -c 'import sys;print(sys.version_info[0])')).$((python3 -c 'import sys;print(sys.version_info[1])')) detected"
-else
-  die "python 3.9+ required"
+if ! python3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)"; then
+  die "python 3.9+ required (found $(python3 -c 'import sys;print(".".join(map(str, sys.version_info[:3])))'))"
 fi
+ok "python $(python3 -c 'import sys;print("%d.%d" % sys.version_info[:2])') detected"
 
 cat <<EOF
 
