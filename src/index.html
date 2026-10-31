@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--__CSP__-->
+<title>webapp-audit — audit any site, app or codebase in one command</title>
+<meta name="description" content="One command audits any site, app or codebase: security, accessibility, performance, SEO and code health, graded A+ to F with evidence behind every finding. Free and open source by JRiSpace.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a1734">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta property="og:type" content="website">
+<meta property="og:title" content="webapp-audit — audit anything in one command">
+<meta property="og:description" content="Security, accessibility, performance, SEO and code health in one graded report. Open source, zero dependencies, works as an agent skill.">
+<meta property="og:image" content="https://audit.jrispace.com/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/touch-icon.png">
+<link rel="canonical" href="https://audit.jrispace.com/">
+<style>
+  :root{
+    --bg:#06070b; --surface:#0e1119; --surface-2:#141926; --border:#1f2433;
+    --text:#eef0f6; --dim:#98a0b4; --faint:#8b93a8;
+    --accent:#ff4d5e; --accent-2:#b02a37; --accent-soft:rgba(255,77,94,.12);
+    --green:#2ee66b; --amber:#ffb020; --blue:#5b9cff;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+    --r:18px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.62;
+    overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* ---- living background: cursor glow + drifting orbs + grain ---- */
+  #glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(600px circle at var(--mx,50%) var(--my,20%),rgba(255,77,94,.10),transparent 62%),
+               radial-gradient(900px circle at calc(var(--mx,50%) - 18%) calc(var(--my,20%) + 22%),rgba(91,156,255,.08),transparent 60%);
+    transition:background .18s linear}
+  .orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.5;pointer-events:none;z-index:0;animation:float 22s ease-in-out infinite}
+  .orb-a{width:520px;height:520px;top:-180px;right:-120px;background:radial-gradient(circle,rgba(255,77,94,.4),transparent 70%)}
+  .orb-b{width:460px;height:460px;bottom:-200px;left:-140px;background:radial-gradient(circle,rgba(91,156,255,.32),transparent 70%);animation-delay:-8s}
+  @keyframes float{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(24px,-30px,0) scale(1.08)}}
+  .grain{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.035;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.6'/></svg>")}
+
+  header{position:sticky;top:0;z-index:9;padding:16px 0;border-bottom:1px solid transparent;
+    transition:background .3s,border-color .3s,backdrop-filter .3s}
+  header.stuck{background:rgba(6,7,11,.78);backdrop-filter:blur(14px) saturate(1.2);border-bottom-color:var(--border)}
+  .bar{display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:750;letter-spacing:-.015em;text-decoration:none}
+  .brand .mark{width:34px;height:34px;filter:drop-shadow(0 6px 16px rgba(255,77,94,.28))}
+  .brand small{display:block;font-weight:550;color:var(--faint);font-size:.66rem;letter-spacing:.16em;text-transform:uppercase}
+  nav{margin-left:auto;display:flex;gap:26px;font-size:.85rem;color:var(--dim)}
+  nav a{text-decoration:none;position:relative;padding:4px 0;transition:color .2s}
+  nav a::after{content:'';position:absolute;left:0;bottom:0;width:0;height:1px;background:var(--accent);transition:width .25s}
+  nav a:hover{color:var(--text)}nav a:hover::after{width:100%}
+  @media(max-width:760px){nav{display:none}}
+
+  /* ---- hero ---- */
+  .hero{padding:84px 0 60px;position:relative}
+  .pill{display:inline-flex;align-items:center;gap:9px;font-size:.7rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--dim);border:1px solid var(--border);border-radius:999px;
+    padding:7px 14px;background:rgba(255,255,255,.025);backdrop-filter:blur(6px)}
+  .pulse{width:7px;height:7px;border-radius:50%;background:var(--green);position:relative}
+  .pulse::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--green);
+    animation:ping 2.4s ease-out infinite}
+  @keyframes ping{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.2);opacity:0}}
+
+  h1{font-size:clamp(2.3rem,5.6vw,4rem);line-height:1.02;letter-spacing:-.035em;margin:24px 0 20px;font-weight:820}
+  .shimmer{background:linear-gradient(100deg,#ff8f9d 0%,#ff4d5e 30%,#b02a37 55%,#ff8f9d 80%);
+    background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shimmer 7s linear infinite}
+  @keyframes shimmer{to{background-position:-220% 0}}
+  .lede{color:var(--dim);font-size:1.08rem;max-width:63ch}
+  .hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:14px 22px;border-radius:12px;
+    font-weight:680;font-size:.93rem;text-decoration:none;border:1px solid transparent;
+    transition:transform .22s cubic-bezier(.2,.8,.3,1),box-shadow .22s,background .22s,border-color .22s;
+    position:relative;overflow:hidden}
+  .btn-primary{background:linear-gradient(135deg,#ff4d5e,#b02a37);color:#fff;box-shadow:0 16px 40px -12px rgba(255,77,94,.6)}
+  .btn-primary::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-18deg)}
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 24px 50px -12px rgba(255,77,94,.75)}
+  .btn-primary:hover::after{animation:sweep .9s ease}
+  @keyframes sweep{to{left:130%}}
+  .btn-ghost{border-color:var(--border);color:var(--text);background:rgba(255,255,255,.02)}
+  .btn-ghost:hover{border-color:#38405a;transform:translateY(-3px);background:rgba(255,255,255,.045)}
+
+  /* ---- terminal ---- */
+  .term{margin-top:40px;background:linear-gradient(180deg,#080a11,#05070c);border:1px solid var(--border);
+    border-radius:16px;overflow:hidden;box-shadow:0 40px 90px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.02);
+    position:relative}
+  .term::before{content:'';position:absolute;inset:0;border-radius:16px;padding:1px;
+    background:linear-gradient(140deg,rgba(255,77,94,.5),transparent 40%,rgba(91,156,255,.35));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.55}
+  .term-bar{display:flex;align-items:center;gap:8px;padding:12px 15px;border-bottom:1px solid var(--border);
+    background:#080b12;font-family:var(--mono);font-size:.71rem;color:var(--faint)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .term pre{padding:20px 22px;font-family:var(--mono);font-size:.815rem;line-height:1.9;overflow-x:auto}
+  .c-prompt{color:var(--blue)}.c-cmd{color:#f4f6fb}.c-out{color:#8b93a8}
+  .c-ok{color:var(--green)}.c-bad{color:var(--accent)}.c-warn{color:var(--amber)}
+  .caret{display:inline-block;width:8px;height:15px;background:var(--accent);vertical-align:-2px;
+    animation:blink 1s steps(2,start) infinite}
+  @keyframes blink{50%{opacity:0}}
+  /* visible by default; the animation only applies once #term gets .anim */
+  .line{opacity:1}
+  .term.anim .line{opacity:0;transform:translateY(4px)}
+  .term.anim .line.on{animation:linein .45s cubic-bezier(.2,.8,.3,1) forwards}
+  @keyframes linein{to{opacity:1;transform:none}}
+
+  /* ---- sections ---- */
+  section{padding:78px 0;border-top:1px solid var(--border);position:relative}
+  h2{font-size:1.85rem;letter-spacing:-.025em;margin-bottom:12px;font-weight:780}
+  .sub{color:var(--dim);max-width:66ch;margin-bottom:38px}
+  .js .rise{opacity:0;transform:translateY(22px)}
+  .js .rise.in{animation:rise .7s cubic-bezier(.2,.8,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:18px}
+  .card{position:relative;background:linear-gradient(180deg,rgba(20,25,38,.9),rgba(14,17,25,.9));
+    border:1px solid var(--border);border-radius:var(--r);padding:24px;overflow:hidden;
+    transition:transform .3s cubic-bezier(.2,.8,.3,1),border-color .3s,box-shadow .3s}
+  .card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;
+    background:radial-gradient(320px circle at var(--cx,50%) var(--cy,0%),rgba(255,77,94,.13),transparent 65%);pointer-events:none}
+  .card:hover{transform:translateY(-6px);border-color:rgba(255,77,94,.45);
+    box-shadow:0 26px 60px -22px rgba(0,0,0,.85),0 0 0 1px rgba(255,77,94,.12)}
+  .card:hover::before{opacity:1}
+  .card h3{font-size:1rem;margin-bottom:10px;position:relative}
+  .card ul{list-style:none;display:grid;gap:8px;margin-top:14px;position:relative}
+  .card li{color:var(--dim);font-size:.845rem;display:flex;gap:10px;align-items:flex-start}
+  .card li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);
+    margin-top:8px;flex:0 0 auto;opacity:.75}
+  .card li b{color:var(--text);font-weight:620}
+  .badge{display:inline-block;font-size:.67rem;letter-spacing:.13em;text-transform:uppercase;
+    padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--dim);
+    background:rgba(255,255,255,.02);position:relative}
+
+  /* ---- grade bars ---- */
+  .bars{display:grid;gap:14px;margin-top:26px}
+  .row{display:grid;grid-template-columns:132px 1fr 84px;align-items:center;gap:16px;font-size:.85rem}
+  .row .name{color:var(--dim);font-family:var(--mono);font-size:.78rem}
+  .track{height:8px;border-radius:999px;background:#11151f;overflow:hidden;position:relative}
+  .fill{height:100%;width:0;border-radius:999px;transition:width 1.4s cubic-bezier(.2,.8,.3,1)}
+  .fill.ok{background:linear-gradient(90deg,#1e9e4a,var(--green));box-shadow:0 0 18px rgba(46,230,107,.45)}
+  .fill.mid{background:linear-gradient(90deg,#c98a12,var(--amber));box-shadow:0 0 18px rgba(255,176,32,.4)}
+  .fill.bad{background:linear-gradient(90deg,#a51f2c,var(--accent));box-shadow:0 0 18px rgba(255,77,94,.45)}
+  .row .val{font-family:var(--mono);font-size:.78rem;color:var(--dim);text-align:right}
+  .row .val b{color:var(--text)}
+
+  .finding{background:linear-gradient(180deg,rgba(20,25,38,.85),rgba(14,17,25,.85));
+    border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:12px;
+    padding:16px 20px;margin-bottom:12px;transition:transform .25s,border-color .25s}
+  .finding:hover{transform:translateX(4px);border-color:rgba(255,77,94,.5)}
+  .finding code{font-family:var(--mono);font-size:.77rem;color:#ffb3bd;background:rgba(255,77,94,.1);
+    padding:1px 6px;border-radius:5px}
+  .finding .fix{color:var(--dim);font-size:.84rem;margin-top:6px}
+  .sev{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.08em}
+  .sev.high{color:var(--accent)}.sev.med{color:var(--amber)}
+
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(244px,1fr));gap:16px;counter-reset:s}
+  .step{background:linear-gradient(180deg,rgba(20,25,38,.85),rgba(14,17,25,.85));
+    border:1px solid var(--border);border-radius:14px;padding:22px;position:relative;
+    transition:transform .3s,border-color .3s}
+  .step:hover{transform:translateY(-4px);border-color:rgba(91,156,255,.4)}
+  .step::before{counter-increment:s;content:counter(s);position:absolute;top:14px;right:18px;
+    font-family:var(--mono);font-size:.7rem;color:var(--faint)}
+  .step h3{font-size:.94rem;margin-bottom:7px}
+  .step p{color:var(--dim);font-size:.83rem}
+  code.snip{display:block;margin-top:12px;font-family:var(--mono);font-size:.75rem;color:#8fd0ff;
+    background:#05070c;border:1px solid var(--border);border-radius:9px;padding:10px 12px;overflow-x:auto;
+    white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:6px}
+  th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border)}
+  th{color:var(--faint);font-size:.68rem;letter-spacing:.13em;text-transform:uppercase;font-weight:650}
+  td code{font-family:var(--mono);font-size:.79rem;color:#8fd0ff}
+
+  footer{padding:52px 0 64px;border-top:1px solid var(--border);color:var(--faint);font-size:.83rem}
+  .foot{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+  .foot a{color:#b9c1d4;text-decoration:underline;text-underline-offset:3px}.foot a:hover{color:var(--text)}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+    #glow,.orb{display:none}
+  }
+  @media(max-width:640px){
+    .hero{padding:56px 0 40px}
+    .term pre{font-size:.72rem;padding:16px}
+    .row{grid-template-columns:96px 1fr 70px;gap:10px}
+    section{padding:58px 0}
+  }
+</style>
+</head>
+<body>
+
+<div id="glow" aria-hidden="true"></div>
+<div class="orb orb-a" aria-hidden="true"></div>
+<div class="orb orb-b" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header id="top">
+  <div class="wrap bar">
+    <a class="brand" href="#top">
+      <img class="mark" src="assets/mark.svg" alt="" width="34" height="34">
+      <span>webapp-audit<small>by JRiSpace</small></span>
+    </a>
+    <nav>
+      <a href="#checks">What it checks</a>
+      <a href="#report">The report</a>
+      <a href="#install">Install</a>
+      <a href="#agents">Agents</a>
+      <a href="https://github.com/jrispace/webapp-audit">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <span class="pill"><i class="pulse"></i> open source · zero dependencies · read-only</span>
+    <h1>Audit anything in <span class="shimmer">one command.</span></h1>
+    <p class="lede">Security, accessibility, performance, SEO and code health — measured in a real
+      browser, graded A+ to F, with evidence behind every finding. Built for people who ship, and for
+      AI agents that need a hard gate before they say “done”.</p>
+    <div class="hero-cta">
+      <a class="btn btn-primary" href="#install">Install in 30 seconds</a>
+      <a class="btn btn-ghost" href="https://github.com/jrispace/webapp-audit">Read the source →</a>
+    </div>
+
+    <div class="term" id="term">
+      <div class="term-bar">
+        <span class="dot" style="background:#ff5f57"></span>
+        <span class="dot" style="background:#febc2e"></span>
+        <span class="dot" style="background:#28c840"></span>
+        <span style="margin-left:8px">audit — zsh</span>
+      </div>
+      <pre><span class="c-prompt">$</span> <span class="c-cmd" id="typer"></span><span class="caret" id="caret"></span>
+<span class="line" data-d="300"><span class="c-out"># Audit — https://codestudio.jrispace.com</span></span>
+<span class="line" data-d="200">  <span class="c-out">Overall:</span> <span class="c-warn">B</span> <span class="c-out">(89.2/100)</span></span>
+<span class="line" data-d="120">  <span class="c-out">security</span>       <span class="c-ok">90.0  A</span>     <span class="c-out">0 critical · 0 high</span></span>
+<span class="line" data-d="120">  <span class="c-out">privacy</span>        <span class="c-ok">98.0  A+</span></span>
+<span class="line" data-d="120">  <span class="c-out">accessibility</span>  <span class="c-bad">64.0  D</span>     <span class="c-out">2 high · 2 medium</span></span>
+<span class="line" data-d="120">  <span class="c-out">performance</span>   <span class="c-ok">100.0  A+</span>    <span class="c-out">FCP 852 ms · LCP 852 ms · CLS 0</span></span>
+<span class="line" data-d="120">  <span class="c-out">seo</span>            <span class="c-ok">94.0  A</span></span>
+<span class="line" data-d="120">  <span class="c-out">code</span>          <span class="c-ok">100.0  A+</span></span>
+<span class="line" data-d="260"></span>
+<span class="line" data-d="200"><span class="c-bad">HIGH</span> <span class="c-out">[accessibility] axe:color-contrast — 18 elements below 4.5:1</span></span>
+<span class="line" data-d="160">     <span class="c-out">evidence: #typeBadge, #tabBtnDesign — contrast 4.43 (fg #6c7891)</span></span>
+<span class="line" data-d="260"><span class="c-out">report written to ./audit-report.md</span></span></pre>
+    </div>
+  </div>
+
+  <section id="checks">
+    <h2 class="rise">Six areas, one pass</h2>
+    <p class="sub rise">Measured, not guessed — and a check that cannot run is reported as
+      <em>skipped</em> with the reason, never silently passed.</p>
+    <div class="grid">
+      <div class="card rise"><span class="badge">security · 34% weight</span>
+        <h3>Hardening, end to end</h3>
+        <ul><li><b>TLS</b> version + expiry</li><li><b>HSTS</b> and redirect chain</li>
+        <li><b>CSP</b> quality, not just presence</li><li>clickjacking · cookies · mixed content</li>
+        <li>server version disclosure</li></ul></div>
+      <div class="card rise"><span class="badge">accessibility</span>
+        <h3>axe-core in a real browser</h3>
+        <ul><li>WCAG 2.1 A/AA + best practice</li><li>contrast, labels, landmarks, headings</li>
+        <li>lang, viewport, image alt</li><li>exact CSS selector per failure</li></ul></div>
+      <div class="card rise"><span class="badge">performance</span>
+        <h3>Core Web Vitals</h3>
+        <ul><li>FCP · LCP · CLS · DOM size</li><li>transfer weight + request count</li>
+        <li>heaviest resources listed</li><li>cold vs warm load compared</li></ul></div>
+      <div class="card rise"><span class="badge">seo</span>
+        <h3>Discoverability</h3>
+        <ul><li>title + description length</li><li>canonical · Open Graph · JSON-LD</li>
+        <li>robots.txt · sitemap.xml</li><li>sampled broken internal links</li></ul></div>
+      <div class="card rise"><span class="badge">code</span>
+        <h3>Repo hygiene</h3>
+        <ul><li>dependency CVEs (npm / pip)</li><li>lockfile, test/lint/typecheck scripts</li>
+        <li>.gitignore coverage for secrets</li><li>runtime console errors</li></ul></div>
+      <div class="card rise"><span class="badge">privacy</span>
+        <h3>Third parties &amp; surface</h3>
+        <ul><li>CORS wildcard vs credentials</li><li>COOP / CORP</li>
+        <li>tracker hosts detected by name</li></ul></div>
+    </div>
+  </section>
+
+  <section id="report">
+    <h2 class="rise">Findings you can act on</h2>
+    <p class="sub rise">No score without evidence. Every line names the measurement, the value and
+      the smallest effective fix.</p>
+
+    <div class="bars rise" id="bars">
+      <div class="row"><span class="name">security</span>
+        <span class="track"><i class="fill ok" data-v="90"></i></span><span class="val"><b>90</b> · A</span></div>
+      <div class="row"><span class="name">privacy</span>
+        <span class="track"><i class="fill ok" data-v="98"></i></span><span class="val"><b>98</b> · A+</span></div>
+      <div class="row"><span class="name">accessibility</span>
+        <span class="track"><i class="fill bad" data-v="64"></i></span><span class="val"><b>64</b> · D</span></div>
+      <div class="row"><span class="name">performance</span>
+        <span class="track"><i class="fill ok" data-v="100"></i></span><span class="val"><b>100</b> · A+</span></div>
+      <div class="row"><span class="name">seo</span>
+        <span class="track"><i class="fill ok" data-v="94"></i></span><span class="val"><b>94</b> · A</span></div>
+      <div class="row"><span class="name">code</span>
+        <span class="track"><i class="fill ok" data-v="100"></i></span><span class="val"><b>100</b> · A+</span></div>
+    </div>
+
+    <div style="margin-top:36px">
+      <div class="finding rise"><div><span class="sev high">HIGH</span> <code>hsts</code> — Missing Strict-Transport-Security</div>
+        <div class="fix">evidence: <code>no header</code> · fix: add <code>max-age=31536000; includeSubDomains; preload</code></div></div>
+      <div class="finding rise"><div><span class="sev high">HIGH</span> <code>axe:color-contrast</code> — 18 elements below 4.5:1</div>
+        <div class="fix">evidence: <code>#typeBadge, #tabBtnDesign — 4.43 (fg #6c7891)</code> · fix: darken the muted token one step</div></div>
+      <div class="finding rise"><div><span class="sev med">MEDIUM</span> <code>landmark-one-main</code> — no main landmark</div>
+        <div class="fix">evidence: <code>html</code> · fix: wrap the primary content in <code>&lt;main&gt;</code></div></div>
+    </div>
+
+    <p class="sub rise" style="margin-top:28px">A+ ≥ 95 · A ≥ 90 · B ≥ 80 · C ≥ 70 · D ≥ 60 · F &lt; 60.
+      A critical security finding caps the overall grade.</p>
+  </section>
+
+  <section id="install">
+    <h2 class="rise">Install</h2>
+    <p class="sub rise">No <code>pip install</code>, no <code>npm install</code> — the browser driver
+      and axe-core are vendored. Needs python3 3.9+, node and a local Chrome or Chromium.</p>
+    <div class="steps">
+      <div class="step rise"><h3>One line</h3><p>Clones the skill, links the CLI, wires every agent it finds.</p>
+        <code class="snip" tabindex="0">curl -sL https://audit.jrispace.com/install.sh | bash</code></div>
+      <div class="step rise"><h3>Audit a live site</h3><p>Headers, CSP, axe, vitals, SEO and links in one pass.</p>
+        <code class="snip" tabindex="0">audit https://your-site.com</code></div>
+      <div class="step rise"><h3>Audit a codebase</h3><p>Static gate, dependency CVEs, repo hygiene.</p>
+        <code class="snip" tabindex="0">audit ~/Projects/your-app --deep</code></div>
+      <div class="step rise"><h3>Gate your CI</h3><p>Exit code 3 when the grade falls below C.</p>
+        <code class="snip" tabindex="0">audit "$URL" --no-browser --json</code></div>
+    </div>
+    <table class="rise">
+      <tr><th>flag</th><th>effect</th></tr>
+      <tr><td><code>--deep</code></td><td>also run <code>npm audit</code> / <code>pip-audit</code> on a codebase</td></tr>
+      <tr><td><code>--no-browser</code></td><td>HTTP-only pass, for CI or machines without Chrome</td></tr>
+      <tr><td><code>--json</code></td><td>machine-readable findings, same data as the markdown</td></tr>
+      <tr><td><code>--out FILE</code></td><td>where to write the report (default <code>./audit-report.md</code>)</td></tr>
+      <tr><td><code>--timeout MS</code></td><td>browser wait budget, default 30 000 ms</td></tr>
+    </table>
+  </section>
+
+  <section id="agents">
+    <h2 class="rise">Works as an agent skill</h2>
+    <p class="sub rise">The repo is a standard Agent Skill — <code>SKILL.md</code> plus scripts. Symlink
+      it once and any coding agent can audit before it claims the work is finished.</p>
+    <div class="steps">
+      <div class="step rise"><h3>Claude Code</h3><p>Skills directory, auto-discovered.</p>
+        <code class="snip" tabindex="0">ln -s "$PWD" ~/.claude/skills/webapp-audit</code></div>
+      <div class="step rise"><h3>Hermes Agent</h3><p>Loaded on demand from the skill index.</p>
+        <code class="snip" tabindex="0">ln -s "$PWD" ~/.hermes/skills/quality/webapp-audit</code></div>
+      <div class="step rise"><h3>Codex CLI</h3><p>Adds an <code>/audit</code> prompt.</p>
+        <code class="snip" tabindex="0">cp prompts/audit.md ~/.codex/prompts/</code></div>
+      <div class="step rise"><h3>Cursor</h3><p>Adds a rule that fires on “audit”.</p>
+        <code class="snip" tabindex="0">cp rules/audit.mdc ~/.cursor/rules/</code></div>
+    </div>
+    <p class="sub rise" style="margin-top:26px">Then ask normally — <em>“audit my site”</em>,
+      <em>“is this production-ready?”</em> — and the agent runs the tool, reads the report and gives you
+      the grade table with the blocking findings.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div>webapp-audit · MIT · vendored axe-core 4.10.2 (MPL-2.0)</div>
+    <div><a href="https://github.com/jrispace/webapp-audit">GitHub</a> ·
+      <a href="https://jrispace.com">JRiSpace</a> · <span>Sylvenson Richard</span></div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  document.body.classList.add('js');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* cursor-following light */
+  if (!reduce) {
+    var root = document.documentElement, raf = null, mx = 50, my = 20;
+    window.addEventListener('pointermove', function (e) {
+      mx = (e.clientX / window.innerWidth) * 100;
+      my = (e.clientY / window.innerHeight) * 100;
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        root.style.setProperty('--mx', mx + '%');
+        root.style.setProperty('--my', my + '%');
+        raf = null;
+      });
+    }, { passive: true });
+
+    /* card spotlight */
+    document.querySelectorAll('.card').forEach(function (card) {
+      card.addEventListener('pointermove', function (e) {
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--cx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--cy', (e.clientY - r.top) + 'px');
+      }, { passive: true });
+    });
+  }
+
+  /* sticky header state */
+  var header = document.getElementById('top');
+  var onScroll = function () { header.classList.toggle('stuck', window.scrollY > 24); };
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  /* reveal on scroll */
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      en.target.classList.add('in');
+      if (en.target.id === 'bars') {
+        en.target.querySelectorAll('.fill').forEach(function (f) {
+          f.style.width = f.dataset.v + '%';
+        });
+      }
+      io.unobserve(en.target);
+    });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.rise').forEach(function (el) { io.observe(el); });
+
+  /* terminal: type the command, then drop the lines in one by one */
+  var cmd = 'audit https://codestudio.jrispace.com';
+  var typer = document.getElementById('typer');
+  var caret = document.getElementById('caret');
+  var lines = Array.prototype.slice.call(document.querySelectorAll('#term .line'));
+
+  function playLines(i) {
+    if (i >= lines.length) { if (caret) caret.style.display = 'inline-block'; return; }
+    lines[i].classList.add('on');
+    setTimeout(function () { playLines(i + 1); }, Number(lines[i].dataset.d || 120));
+  }
+  function startTerm() {
+    if (reduce) { typer.textContent = cmd; return; }
+    term.classList.add('anim');
+    if (caret) caret.style.display = 'none';
+    var i = 0;
+    (function type() {
+      typer.textContent = cmd.slice(0, ++i);
+      if (i < cmd.length) setTimeout(type, 34 + Math.random() * 42);
+      else setTimeout(function () { playLines(0); }, 280);
+    })();
+  }
+  var term = document.getElementById('term');
+  var seenTerm = false;
+  var termIO = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting && !seenTerm) { seenTerm = true; startTerm(); termIO.disconnect(); }
+    });
+  }, { threshold: 0.25 });
+  if (term) termIO.observe(term);
+})();
+</script>
+
+</body>
+</html>

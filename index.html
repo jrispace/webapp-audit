@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vZaDy52mGYngQOyXX4GXCQ27srvaf1DWn8TjX2GeAKs='; style-src 'sha256-Cevyj5mEHizFCGMFna0gDYWr+nyeajdivojjnZUTBus='; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; manifest-src 'self'">
 <title>webapp-audit — audit any site, app or codebase in one command</title>
 <meta name="description" content="One command audits any site, app or codebase: security, accessibility, performance, SEO and code health, graded A+ to F with evidence behind every finding. Free and open source by JRiSpace.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +19,7 @@
 <style>
   :root{
     --bg:#06070b; --surface:#0e1119; --surface-2:#141926; --border:#1f2433;
-    --text:#eef0f6; --dim:#98a0b4; --faint:#666e82;
+    --text:#eef0f6; --dim:#98a0b4; --faint:#8b93a8;
     --accent:#ff4d5e; --accent-2:#b02a37; --accent-soft:rgba(255,77,94,.12);
     --green:#2ee66b; --amber:#ffb020; --blue:#5b9cff;
     --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
@@ -182,7 +183,7 @@
 
   footer{padding:52px 0 64px;border-top:1px solid var(--border);color:var(--faint);font-size:.83rem}
   .foot{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
-  .foot a{color:var(--dim);text-decoration:none}.foot a:hover{color:var(--text)}
+  .foot a{color:#b9c1d4;text-decoration:underline;text-underline-offset:3px}.foot a:hover{color:var(--text)}
 
   @media (prefers-reduced-motion: reduce){
     *{animation:none!important;transition:none!important}
@@ -327,13 +328,13 @@
       and axe-core are vendored. Needs python3 3.9+, node and a local Chrome or Chromium.</p>
     <div class="steps">
       <div class="step rise"><h3>One line</h3><p>Clones the skill, links the CLI, wires every agent it finds.</p>
-        <code class="snip">curl -sL https://audit.jrispace.com/install.sh | bash</code></div>
+        <code class="snip" tabindex="0">curl -sL https://audit.jrispace.com/install.sh | bash</code></div>
       <div class="step rise"><h3>Audit a live site</h3><p>Headers, CSP, axe, vitals, SEO and links in one pass.</p>
-        <code class="snip">audit https://your-site.com</code></div>
+        <code class="snip" tabindex="0">audit https://your-site.com</code></div>
       <div class="step rise"><h3>Audit a codebase</h3><p>Static gate, dependency CVEs, repo hygiene.</p>
-        <code class="snip">audit ~/Projects/your-app --deep</code></div>
+        <code class="snip" tabindex="0">audit ~/Projects/your-app --deep</code></div>
       <div class="step rise"><h3>Gate your CI</h3><p>Exit code 3 when the grade falls below C.</p>
-        <code class="snip">audit "$URL" --no-browser --json</code></div>
+        <code class="snip" tabindex="0">audit "$URL" --no-browser --json</code></div>
     </div>
     <table class="rise">
       <tr><th>flag</th><th>effect</th></tr>
@@ -351,13 +352,13 @@
       it once and any coding agent can audit before it claims the work is finished.</p>
     <div class="steps">
       <div class="step rise"><h3>Claude Code</h3><p>Skills directory, auto-discovered.</p>
-        <code class="snip">ln -s "$PWD" ~/.claude/skills/webapp-audit</code></div>
+        <code class="snip" tabindex="0">ln -s "$PWD" ~/.claude/skills/webapp-audit</code></div>
       <div class="step rise"><h3>Hermes Agent</h3><p>Loaded on demand from the skill index.</p>
-        <code class="snip">ln -s "$PWD" ~/.hermes/skills/quality/webapp-audit</code></div>
+        <code class="snip" tabindex="0">ln -s "$PWD" ~/.hermes/skills/quality/webapp-audit</code></div>
       <div class="step rise"><h3>Codex CLI</h3><p>Adds an <code>/audit</code> prompt.</p>
-        <code class="snip">cp prompts/audit.md ~/.codex/prompts/</code></div>
+        <code class="snip" tabindex="0">cp prompts/audit.md ~/.codex/prompts/</code></div>
       <div class="step rise"><h3>Cursor</h3><p>Adds a rule that fires on “audit”.</p>
-        <code class="snip">cp rules/audit.mdc ~/.cursor/rules/</code></div>
+        <code class="snip" tabindex="0">cp rules/audit.mdc ~/.cursor/rules/</code></div>
     </div>
     <p class="sub rise" style="margin-top:26px">Then ask normally — <em>“audit my site”</em>,
       <em>“is this production-ready?”</em> — and the agent runs the tool, reads the report and gives you
