@@ -101,7 +101,11 @@
     -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.55}
   .term-bar{display:flex;align-items:center;gap:8px;padding:12px 15px;border-bottom:1px solid var(--border);
     background:#080b12;font-family:var(--mono);font-size:.71rem;color:var(--faint)}
-  .dot{width:11px;height:11px;border-radius:50%}
+  .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
+  .dot-r{background:#ff5f57}.dot-y{background:#febc2e}.dot-g{background:#28c840}
+  .term-title{margin-left:8px}
+  .mt{margin-top:28px}
+  .findings{margin-top:36px}
   .term pre{padding:20px 22px;font-family:var(--mono);font-size:.815rem;line-height:1.9;overflow-x:auto}
   .c-prompt{color:var(--blue)}.c-cmd{color:#f4f6fb}.c-out{color:#8b93a8}
   .c-ok{color:var(--green)}.c-bad{color:var(--accent)}.c-warn{color:var(--amber)}
@@ -235,10 +239,10 @@
 
     <div class="term" id="term">
       <div class="term-bar">
-        <span class="dot" style="background:#ff5f57"></span>
-        <span class="dot" style="background:#febc2e"></span>
-        <span class="dot" style="background:#28c840"></span>
-        <span style="margin-left:8px">audit — zsh</span>
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span class="term-title">audit — zsh</span>
       </div>
       <pre><span class="c-prompt">$</span> <span class="c-cmd" id="typer"></span><span class="caret" id="caret"></span>
 <span class="line" data-d="300"><span class="c-out"># Audit — https://codestudio.jrispace.com</span></span>
@@ -309,7 +313,7 @@
         <span class="track"><i class="fill ok" data-v="100"></i></span><span class="val"><b>100</b> · A+</span></div>
     </div>
 
-    <div style="margin-top:36px">
+    <div class="findings">
       <div class="finding rise"><div><span class="sev high">HIGH</span> <code>hsts</code> — Missing Strict-Transport-Security</div>
         <div class="fix">evidence: <code>no header</code> · fix: add <code>max-age=31536000; includeSubDomains; preload</code></div></div>
       <div class="finding rise"><div><span class="sev high">HIGH</span> <code>axe:color-contrast</code> — 18 elements below 4.5:1</div>
@@ -318,7 +322,7 @@
         <div class="fix">evidence: <code>html</code> · fix: wrap the primary content in <code>&lt;main&gt;</code></div></div>
     </div>
 
-    <p class="sub rise" style="margin-top:28px">A+ ≥ 95 · A ≥ 90 · B ≥ 80 · C ≥ 70 · D ≥ 60 · F &lt; 60.
+    <p class="sub rise mt">A+ ≥ 95 · A ≥ 90 · B ≥ 80 · C ≥ 70 · D ≥ 60 · F &lt; 60.
       A critical security finding caps the overall grade.</p>
   </section>
 
@@ -360,7 +364,7 @@
       <div class="step rise"><h3>Cursor</h3><p>Adds a rule that fires on “audit”.</p>
         <code class="snip" tabindex="0">cp rules/audit.mdc ~/.cursor/rules/</code></div>
     </div>
-    <p class="sub rise" style="margin-top:26px">Then ask normally — <em>“audit my site”</em>,
+    <p class="sub rise mt">Then ask normally — <em>“audit my site”</em>,
       <em>“is this production-ready?”</em> — and the agent runs the tool, reads the report and gives you
       the grade table with the blocking findings.</p>
   </section>
